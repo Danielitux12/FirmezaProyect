@@ -3,7 +3,7 @@ using Firmeza.Domain.Interfaces;
 using Firmeza.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Firmeza.Infrastructure.Repositories;
+namespace Firmeza.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// Generic repository implementation using Entity Framework Core.
