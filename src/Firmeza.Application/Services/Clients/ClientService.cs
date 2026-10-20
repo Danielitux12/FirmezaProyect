@@ -1,35 +1,38 @@
 using Firmeza.Application.DTOs.Clients;
 using Firmeza.Domain.Entities;
+using Firmeza.Domain.Interfaces;
 
 namespace Firmeza.Application.Services.Clients;
 
 public class ClientService : IClientService
 {
-    private static readonly List<Client> _clients = new();
+    private readonly IClientRepository _clientRepository;
 
-    public Task<IEnumerable<ClientDto>> GetAllAsync()
+    public ClientService(IClientRepository clientRepository)
     {
-        var result = _clients
-            .Where(c => c.IsActive)
-            .Select(c => new ClientDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone,
-                Address = c.Address,
-                IsActive = c.IsActive
-            });
-
-        return Task.FromResult(result);
+        _clientRepository = clientRepository;
     }
 
-    public Task<ClientDto?> GetByIdAsync(Guid id)
+    public async Task<IEnumerable<ClientDto>> GetAllAsync()
     {
-        var client = _clients.FirstOrDefault(c => c.Id == id && c.IsActive);
-        if (client == null) return Task.FromResult<ClientDto?>(null);
+        var clients = await _clientRepository.GetAllAsync();
+        return clients.Select(c => new ClientDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Email = c.Email,
+            Phone = c.Phone,
+            Address = c.Address,
+            IsActive = c.IsActive
+        });
+    }
 
-        return Task.FromResult<ClientDto?>(new ClientDto
+    public async Task<ClientDto?> GetByIdAsync(Guid id)
+    {
+        var client = await _clientRepository.GetByIdAsync(id);
+        if (client == null) return null;
+
+        return new ClientDto
         {
             Id = client.Id,
             Name = client.Name,
@@ -37,10 +40,10 @@ public class ClientService : IClientService
             Phone = client.Phone,
             Address = client.Address,
             IsActive = client.IsActive
-        });
+        };
     }
 
-    public Task<ClientDto> CreateAsync(CreateClientDto dto)
+    public async Task<ClientDto> CreateAsync(CreateClientDto dto)
     {
         var client = new Client
         {
@@ -53,38 +56,34 @@ public class ClientService : IClientService
             IsActive = true
         };
 
-        _clients.Add(client);
+        var created = await _clientRepository.AddAsync(client);
 
-        return Task.FromResult(new ClientDto
+        return new ClientDto
         {
-            Id = client.Id,
-            Name = client.Name,
-            Email = client.Email,
-            Phone = client.Phone,
-            Address = client.Address,
-            IsActive = client.IsActive
-        });
+            Id = created.Id,
+            Name = created.Name,
+            Email = created.Email,
+            Phone = created.Phone,
+            Address = created.Address,
+            IsActive = created.IsActive
+        };
     }
 
-    public Task<bool> UpdateAsync(Guid id, CreateClientDto dto)
+    public async Task<bool> UpdateAsync(Guid id, CreateClientDto dto)
     {
-        var client = _clients.FirstOrDefault(c => c.Id == id && c.IsActive);
-        if (client == null) return Task.FromResult(false);
+        var client = await _clientRepository.GetByIdAsync(id);
+        if (client == null) return false;
 
         client.Name = dto.Name;
         client.Email = dto.Email;
         client.Phone = dto.Phone;
         client.Address = dto.Address;
 
-        return Task.FromResult(true);
+        return await _clientRepository.UpdateAsync(client);
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var client = _clients.FirstOrDefault(c => c.Id == id && c.IsActive);
-        if (client == null) return Task.FromResult(false);
-
-        client.IsActive = false;
-        return Task.FromResult(true);
+        return await _clientRepository.DeleteAsync(id);
     }
 }

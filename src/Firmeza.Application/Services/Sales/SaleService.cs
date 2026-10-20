@@ -1,44 +1,47 @@
 using Firmeza.Application.DTOs.SaleDetails;
 using Firmeza.Application.DTOs.Sales;
 using Firmeza.Domain.Entities;
+using Firmeza.Domain.Interfaces;
 
 namespace Firmeza.Application.Services.Sales;
 
 public class SaleService : ISaleService
 {
-    private static readonly List<Sale> _sales = new();
+    private readonly ISaleRepository _saleRepository;
 
-    public Task<IEnumerable<SaleDto>> GetAllAsync()
+    public SaleService(ISaleRepository saleRepository)
     {
-        var result = _sales
-            .Where(s => s.IsActive)
-            .Select(s => new SaleDto
-            {
-                Id = s.Id,
-                Date = s.Date,
-                Total = s.Total,
-                ClientId = s.ClientId,
-                ClientName = s.Client?.Name,
-                SaleDetails = s.SaleDetails.Select(d => new SaleDetailDto
-                {
-                    Id = d.Id,
-                    ProductId = d.ProductId,
-                    ProductName = d.Product?.Name,
-                    Quantity = d.Quantity,
-                    UnitPrice = d.UnitPrice,
-                    Subtotal = d.Subtotal
-                }).ToList()
-            });
-
-        return Task.FromResult(result);
+        _saleRepository = saleRepository;
     }
 
-    public Task<SaleDto?> GetByIdAsync(Guid id)
+    public async Task<IEnumerable<SaleDto>> GetAllAsync()
     {
-        var sale = _sales.FirstOrDefault(s => s.Id == id && s.IsActive);
-        if (sale == null) return Task.FromResult<SaleDto?>(null);
+        var sales = await _saleRepository.GetAllAsync();
+        return sales.Select(s => new SaleDto
+        {
+            Id = s.Id,
+            Date = s.Date,
+            Total = s.Total,
+            ClientId = s.ClientId,
+            ClientName = s.Client?.Name,
+            SaleDetails = s.SaleDetails.Select(d => new SaleDetailDto
+            {
+                Id = d.Id,
+                ProductId = d.ProductId,
+                ProductName = d.Product?.Name,
+                Quantity = d.Quantity,
+                UnitPrice = d.UnitPrice,
+                Subtotal = d.Subtotal
+            }).ToList()
+        });
+    }
 
-        return Task.FromResult<SaleDto?>(new SaleDto
+    public async Task<SaleDto?> GetByIdAsync(Guid id)
+    {
+        var sale = await _saleRepository.GetByIdAsync(id);
+        if (sale == null) return null;
+
+        return new SaleDto
         {
             Id = sale.Id,
             Date = sale.Date,
@@ -54,10 +57,10 @@ public class SaleService : ISaleService
                 UnitPrice = d.UnitPrice,
                 Subtotal = d.Subtotal
             }).ToList()
-        });
+        };
     }
 
-    public Task<SaleDto> CreateAsync(CreateSaleDto dto)
+    public async Task<SaleDto> CreateAsync(CreateSaleDto dto)
     {
         var saleId = Guid.NewGuid();
         var details = dto.SaleDetails.Select(d => new SaleDetail
@@ -83,15 +86,15 @@ public class SaleService : ISaleService
             IsActive = true
         };
 
-        _sales.Add(sale);
+        var created = await _saleRepository.AddAsync(sale);
 
-        return Task.FromResult(new SaleDto
+        return new SaleDto
         {
-            Id = sale.Id,
-            Date = sale.Date,
-            Total = sale.Total,
-            ClientId = sale.ClientId,
-            SaleDetails = details.Select(d => new SaleDetailDto
+            Id = created.Id,
+            Date = created.Date,
+            Total = created.Total,
+            ClientId = created.ClientId,
+            SaleDetails = created.SaleDetails.Select(d => new SaleDetailDto
             {
                 Id = d.Id,
                 ProductId = d.ProductId,
@@ -99,15 +102,11 @@ public class SaleService : ISaleService
                 UnitPrice = d.UnitPrice,
                 Subtotal = d.Subtotal
             }).ToList()
-        });
+        };
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var sale = _sales.FirstOrDefault(s => s.Id == id && s.IsActive);
-        if (sale == null) return Task.FromResult(false);
-
-        sale.IsActive = false;
-        return Task.FromResult(true);
+        return await _saleRepository.DeleteAsync(id);
     }
 }

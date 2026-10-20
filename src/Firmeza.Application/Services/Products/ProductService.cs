@@ -1,35 +1,38 @@
 using Firmeza.Application.DTOs.Products;
 using Firmeza.Domain.Entities;
+using Firmeza.Domain.Interfaces;
 
 namespace Firmeza.Application.Services.Products;
 
 public class ProductService : IProductService
 {
-    private static readonly List<Product> _products = new();
+    private readonly IProductRepository _productRepository;
 
-    public Task<IEnumerable<ProductDto>> GetAllAsync()
+    public ProductService(IProductRepository productRepository)
     {
-        var result = _products
-            .Where(p => p.IsActive)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                Stock = p.Stock,
-                IsActive = p.IsActive
-            });
-
-        return Task.FromResult(result);
+        _productRepository = productRepository;
     }
 
-    public Task<ProductDto?> GetByIdAsync(Guid id)
+    public async Task<IEnumerable<ProductDto>> GetAllAsync()
     {
-        var product = _products.FirstOrDefault(p => p.Id == id && p.IsActive);
-        if (product == null) return Task.FromResult<ProductDto?>(null);
+        var products = await _productRepository.GetAllAsync();
+        return products.Select(p => new ProductDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            Price = p.Price,
+            Stock = p.Stock,
+            IsActive = p.IsActive
+        });
+    }
 
-        return Task.FromResult<ProductDto?>(new ProductDto
+    public async Task<ProductDto?> GetByIdAsync(Guid id)
+    {
+        var product = await _productRepository.GetByIdAsync(id);
+        if (product == null) return null;
+
+        return new ProductDto
         {
             Id = product.Id,
             Name = product.Name,
@@ -37,10 +40,10 @@ public class ProductService : IProductService
             Price = product.Price,
             Stock = product.Stock,
             IsActive = product.IsActive
-        });
+        };
     }
 
-    public Task<ProductDto> CreateAsync(CreateProductDto dto)
+    public async Task<ProductDto> CreateAsync(CreateProductDto dto)
     {
         var product = new Product
         {
@@ -53,38 +56,34 @@ public class ProductService : IProductService
             IsActive = true
         };
 
-        _products.Add(product);
+        var created = await _productRepository.AddAsync(product);
 
-        return Task.FromResult(new ProductDto
+        return new ProductDto
         {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Price = product.Price,
-            Stock = product.Stock,
-            IsActive = product.IsActive
-        });
+            Id = created.Id,
+            Name = created.Name,
+            Description = created.Description,
+            Price = created.Price,
+            Stock = created.Stock,
+            IsActive = created.IsActive
+        };
     }
 
-    public Task<bool> UpdateAsync(Guid id, CreateProductDto dto)
+    public async Task<bool> UpdateAsync(Guid id, CreateProductDto dto)
     {
-        var product = _products.FirstOrDefault(p => p.Id == id && p.IsActive);
-        if (product == null) return Task.FromResult(false);
+        var product = await _productRepository.GetByIdAsync(id);
+        if (product == null) return false;
 
         product.Name = dto.Name;
         product.Description = dto.Description;
         product.Price = dto.Price;
         product.Stock = dto.Stock;
 
-        return Task.FromResult(true);
+        return await _productRepository.UpdateAsync(product);
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var product = _products.FirstOrDefault(p => p.Id == id && p.IsActive);
-        if (product == null) return Task.FromResult(false);
-
-        product.IsActive = false;
-        return Task.FromResult(true);
+        return await _productRepository.DeleteAsync(id);
     }
 }

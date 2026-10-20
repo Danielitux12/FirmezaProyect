@@ -1,35 +1,38 @@
 using Firmeza.Application.DTOs.SaleDetails;
 using Firmeza.Domain.Entities;
+using Firmeza.Domain.Interfaces;
 
 namespace Firmeza.Application.Services.SaleDetails;
 
 public class SaleDetailService : ISaleDetailService
 {
-    private static readonly List<SaleDetail> _details = new();
+    private readonly ISaleDetailRepository _saleDetailRepository;
 
-    public Task<IEnumerable<SaleDetailDto>> GetAllAsync()
+    public SaleDetailService(ISaleDetailRepository saleDetailRepository)
     {
-        var result = _details
-            .Where(d => d.IsActive)
-            .Select(d => new SaleDetailDto
-            {
-                Id = d.Id,
-                ProductId = d.ProductId,
-                ProductName = d.Product?.Name,
-                Quantity = d.Quantity,
-                UnitPrice = d.UnitPrice,
-                Subtotal = d.Subtotal
-            });
-
-        return Task.FromResult(result);
+        _saleDetailRepository = saleDetailRepository;
     }
 
-    public Task<SaleDetailDto?> GetByIdAsync(Guid id)
+    public async Task<IEnumerable<SaleDetailDto>> GetAllAsync()
     {
-        var detail = _details.FirstOrDefault(d => d.Id == id && d.IsActive);
-        if (detail == null) return Task.FromResult<SaleDetailDto?>(null);
+        var details = await _saleDetailRepository.GetAllAsync();
+        return details.Select(d => new SaleDetailDto
+        {
+            Id = d.Id,
+            ProductId = d.ProductId,
+            ProductName = d.Product?.Name,
+            Quantity = d.Quantity,
+            UnitPrice = d.UnitPrice,
+            Subtotal = d.Subtotal
+        });
+    }
 
-        return Task.FromResult<SaleDetailDto?>(new SaleDetailDto
+    public async Task<SaleDetailDto?> GetByIdAsync(Guid id)
+    {
+        var detail = await _saleDetailRepository.GetByIdAsync(id);
+        if (detail == null) return null;
+
+        return new SaleDetailDto
         {
             Id = detail.Id,
             ProductId = detail.ProductId,
@@ -37,10 +40,10 @@ public class SaleDetailService : ISaleDetailService
             Quantity = detail.Quantity,
             UnitPrice = detail.UnitPrice,
             Subtotal = detail.Subtotal
-        });
+        };
     }
 
-    public Task<SaleDetailDto> CreateAsync(CreateSaleDetailDto dto)
+    public async Task<SaleDetailDto> CreateAsync(CreateSaleDetailDto dto)
     {
         var detail = new SaleDetail
         {
@@ -53,24 +56,20 @@ public class SaleDetailService : ISaleDetailService
             IsActive = true
         };
 
-        _details.Add(detail);
+        var created = await _saleDetailRepository.AddAsync(detail);
 
-        return Task.FromResult(new SaleDetailDto
+        return new SaleDetailDto
         {
-            Id = detail.Id,
-            ProductId = detail.ProductId,
-            Quantity = detail.Quantity,
-            UnitPrice = detail.UnitPrice,
-            Subtotal = detail.Subtotal
-        });
+            Id = created.Id,
+            ProductId = created.ProductId,
+            Quantity = created.Quantity,
+            UnitPrice = created.UnitPrice,
+            Subtotal = created.Subtotal
+        };
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
-        var detail = _details.FirstOrDefault(d => d.Id == id && d.IsActive);
-        if (detail == null) return Task.FromResult(false);
-
-        detail.IsActive = false;
-        return Task.FromResult(true);
+        return await _saleDetailRepository.DeleteAsync(id);
     }
 }
