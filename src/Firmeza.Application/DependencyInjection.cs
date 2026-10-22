@@ -1,4 +1,6 @@
+using Firmeza.Application.Interfaces;
 using Firmeza.Application.Services.Clients;
+using Firmeza.Application.Services.Excel;
 using Firmeza.Application.Services.Products;
 using Firmeza.Application.Services.SaleDetails;
 using Firmeza.Application.Services.Sales;
@@ -14,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ISaleService, SaleService>();
         services.AddScoped<ISaleDetailService, SaleDetailService>();
+        services.AddScoped<IExcelImportService, ExcelImportService>();
 
         return services;
     }

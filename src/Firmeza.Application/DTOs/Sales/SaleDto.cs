@@ -12,5 +12,7 @@ public class SaleDto
     public decimal Total { get; set; }
     public Guid ClientId { get; set; }
     public string? ClientName { get; set; }
+    public string? ClientEmail { get; set; }
+    public string? ReceiptPdfUrl { get; set; }
     public List<SaleDetailDto> SaleDetails { get; set; } = new();
 }
