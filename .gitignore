@@ -2,6 +2,19 @@
 bin/
 obj/
 out/
+dist/
+
+## Node / Angular
+node_modules/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Generated receipts
+src/Firmeza.API/wwwroot/recibos/*.pdf
+!src/Firmeza.API/wwwroot/recibos/.gitkeep
+
 
 ## Visual Studio / Roslyn / MSBuild
 .vs/
