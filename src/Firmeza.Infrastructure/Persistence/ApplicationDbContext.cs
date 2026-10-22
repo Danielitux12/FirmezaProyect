@@ -1,12 +1,15 @@
 using Firmeza.Domain.Entities;
+using Firmeza.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Firmeza.Infrastructure.Persistence;
 
 /// <summary>
-/// Database context for the application using Entity Framework Core.
+/// Database context for the application using Entity Framework Core and ASP.NET Core Identity.
 /// </summary>
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -21,6 +24,15 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // ApplicationUser configuration
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.HasOne(u => u.Client)
+                  .WithMany()
+                  .HasForeignKey(u => u.ClientId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
 
         // Client configuration
         modelBuilder.Entity<Client>(entity =>
