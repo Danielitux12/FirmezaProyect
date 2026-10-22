@@ -1,9 +1,11 @@
 using Firmeza.Application.DTOs.Products;
 using Firmeza.Application.Services.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Firmeza.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
@@ -16,6 +18,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Client")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetAll()
     {
         var products = await _productService.GetAllAsync();
@@ -23,6 +26,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin,Client")]
     public async Task<ActionResult<ProductDto>> GetById(Guid id)
     {
         var product = await _productService.GetByIdAsync(id);
@@ -35,6 +39,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductDto dto)
     {
         var created = await _productService.CreateAsync(dto);
@@ -42,6 +47,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateProductDto dto)
     {
         var updated = await _productService.UpdateAsync(id, dto);
@@ -54,6 +60,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _productService.DeleteAsync(id);
