@@ -1,6 +1,8 @@
+using Firmeza.Application.Interfaces;
 using Firmeza.Domain.Interfaces;
 using Firmeza.Infrastructure.Persistence;
 using Firmeza.Infrastructure.Persistence.Repositories;
+using Firmeza.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,13 @@ public static class DependencyInjection
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<ISaleDetailRepository, SaleDetailRepository>();
 
+        // Services
+        services.AddScoped<IPdfGeneratorService, PdfGeneratorService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IExcelReaderService, ExcelReaderService>();
+        services.AddScoped<IExcelExportService, ExcelExportService>();
+
         return services;
     }
 }
+
