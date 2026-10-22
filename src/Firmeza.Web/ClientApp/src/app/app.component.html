@@ -1,0 +1,53 @@
+<header class="app-header">
+  <div class="header-container">
+    <div class="logo">
+      <h1>Firmeza</h1>
+      <span class="subtitle">
+        <ng-container *ngIf="authService.isAdmin()">Panel de Administración</ng-container>
+        <ng-container *ngIf="authService.isClient()">Portal de Clientes</ng-container>
+        <ng-container *ngIf="!authService.isAuthenticated()">Sistema de Ventas y Materiales</ng-container>
+      </span>
+    </div>
+
+    <!-- Navegación según Rol -->
+    <nav class="nav-links">
+      <!-- Opciones ADMIN -->
+      <ng-container *ngIf="authService.isAdmin()">
+        <a routerLink="/admin/clients" routerLinkActive="active">Clientes</a>
+        <a routerLink="/admin/products" routerLinkActive="active">Productos</a>
+        <a routerLink="/admin/sales" routerLinkActive="active">Ventas</a>
+        <a routerLink="/admin/sale-details" routerLinkActive="active">Detalles</a>
+      </ng-container>
+
+      <!-- Opciones CLIENTE -->
+      <ng-container *ngIf="authService.isClient()">
+        <a routerLink="/portal/products" routerLinkActive="active">Catálogo</a>
+        <a routerLink="/portal/cart" routerLinkActive="active">
+          🛒 Carrito
+          <span *ngIf="cartService.totalItems() > 0" class="cart-nav-badge">
+            {{ cartService.totalItems() }}
+          </span>
+        </a>
+        <a routerLink="/portal/my-sales" routerLinkActive="active">Mis Ventas</a>
+      </ng-container>
+
+      <!-- Opciones NO AUTENTICADO -->
+      <ng-container *ngIf="!authService.isAuthenticated()">
+        <a routerLink="/login" routerLinkActive="active">Ingresar</a>
+      </ng-container>
+    </nav>
+
+    <!-- Usuario autenticado & Logout -->
+    <div *ngIf="authService.isAuthenticated()" class="user-badge-container">
+      <span class="badge" [class.badge-admin]="authService.isAdmin()" [class.badge-client]="authService.isClient()">
+        {{ authService.userRole() }}
+      </span>
+      <span class="user-email">{{ authService.currentUser()?.email }}</span>
+      <button (click)="onLogout()" class="btn btn-sm btn-logout">Cerrar Sesión</button>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
